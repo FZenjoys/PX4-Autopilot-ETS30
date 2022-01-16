@@ -1186,7 +1186,7 @@ FixedwingPositionControl::control_auto_position(const hrt_abstime &now, const fl
 	if (_param_fw_use_npfg.get()) {
 		_npfg.setAirspeedNom(target_airspeed * _eas2tas);
 		_npfg.setAirspeedMax(_param_fw_airspd_max.get() * _eas2tas);
-		_npfg.navigateWaypoints(prev_wp, curr_wp, curr_pos, get_nav_speed_2d(ground_speed), _wind_vel);
+		_npfg.navigateWaypoints(prev_wp_local, curr_wp_local, curr_pos, get_nav_speed_2d(ground_speed), _wind_vel);
 		_att_sp.roll_body = _npfg.getRollSetpoint();
 		target_airspeed = _npfg.getAirspeedRef() / _eas2tas;
 
@@ -1283,6 +1283,7 @@ FixedwingPositionControl::control_auto_loiter(const hrt_abstime &now, const floa
 
 	/* current waypoint (the one currently heading for) */
 	curr_wp = Vector2d(pos_sp_curr.lat, pos_sp_curr.lon);
+	Vector2f curr_wp_local = _global_local_proj_ref.project(pos_sp_curr.lat, pos_sp_curr.lon);
 
 	if (pos_sp_prev.valid) {
 		prev_wp(0) = pos_sp_prev.lat;
@@ -1355,12 +1356,13 @@ FixedwingPositionControl::control_auto_loiter(const hrt_abstime &now, const floa
 	if (_param_fw_use_npfg.get()) {
 		_npfg.setAirspeedNom(target_airspeed * _eas2tas);
 		_npfg.setAirspeedMax(_param_fw_airspd_max.get() * _eas2tas);
-		_npfg.navigateLoiter(curr_wp, curr_pos, loiter_radius, loiter_direction, get_nav_speed_2d(ground_speed), _wind_vel);
+		_npfg.navigateLoiter(curr_wp_local, curr_pos, loiter_radius, loiter_direction, get_nav_speed_2d(ground_speed),
+				     _wind_vel);
 		_att_sp.roll_body = _npfg.getRollSetpoint();
 		target_airspeed = _npfg.getAirspeedRef() / _eas2tas;
 
 	} else {
-		_l1_control.navigate_loiter(curr_wp, curr_pos, loiter_radius, loiter_direction, get_nav_speed_2d(ground_speed));
+		_l1_control.navigate_loiter(curr_wp_local, curr_pos, loiter_radius, loiter_direction, get_nav_speed_2d(ground_speed));
 		_att_sp.roll_body = _l1_control.get_roll_setpoint();
 	}
 
@@ -1623,6 +1625,8 @@ FixedwingPositionControl::control_auto_landing(const hrt_abstime &now, const flo
 		prev_wp(1) = pos_sp_curr.lon;
 	}
 
+	Vector2f prev_wp_local = _global_local_proj_ref.project(prev_wp(0), prev_wp(1));
+
 	// apply full flaps for landings. this flag will also trigger the use of flaperons
 	// if they have been enabled using the corresponding parameter
 	_att_sp.apply_flaps = vehicle_attitude_setpoint_s::FLAPS_LAND;
@@ -1785,7 +1789,7 @@ FixedwingPositionControl::control_auto_landing(const hrt_abstime &now, const flo
 
 			} else {
 				// normal navigation
-				_npfg.navigateWaypoints(prev_wp, curr_wp, curr_pos, ground_speed, _wind_vel);
+				_npfg.navigateWaypoints(prev_wp_local, curr_wp_local, curr_pos, ground_speed, _wind_vel);
 			}
 
 			target_airspeed = _npfg.getAirspeedRef() /  _eas2tas;
@@ -1798,7 +1802,7 @@ FixedwingPositionControl::control_auto_landing(const hrt_abstime &now, const flo
 
 			} else {
 				// normal navigation
-				_l1_control.navigate_waypoints(prev_wp, curr_wp, curr_pos, ground_speed);
+				_l1_control.navigate_waypoints(prev_wp_local, curr_wp_local, curr_pos, ground_speed);
 			}
 
 			_att_sp.roll_body = _l1_control.get_roll_setpoint();
@@ -1900,7 +1904,7 @@ FixedwingPositionControl::control_auto_landing(const hrt_abstime &now, const flo
 
 			} else {
 				// normal navigation
-				_npfg.navigateWaypoints(prev_wp, curr_wp, curr_pos, ground_speed, _wind_vel);
+				_npfg.navigateWaypoints(prev_wp_local, curr_wp_local, curr_pos, ground_speed, _wind_vel);
 			}
 
 			target_airspeed = _npfg.getAirspeedRef() / _eas2tas;
@@ -1913,7 +1917,7 @@ FixedwingPositionControl::control_auto_landing(const hrt_abstime &now, const flo
 
 			} else {
 				// normal navigation
-				_l1_control.navigate_waypoints(prev_wp, curr_wp, curr_pos, ground_speed);
+				_l1_control.navigate_waypoints(prev_wp_local, curr_wp_local, curr_pos, ground_speed);
 			}
 
 			_att_sp.roll_body = _l1_control.get_roll_setpoint();
