@@ -249,6 +249,22 @@ public:
 			    const matrix::Vector2f &wind_vel);
 
 	/*
+	 * Loitering (unlimited) logic. Takes loiter center, radius, and direction and
+	 * determines the relevant parameters for evaluating the NPFG guidance law,
+	 * then updates control setpoints.
+	 *
+	 * @param[in] loiter_center The position of the center of the loiter circle [m]
+	 * @param[in] vehicle_pos Vehicle position in WGS84 coordinates (lat,lon) [deg]
+	 * @param[in] radius Loiter radius [m]
+	 * @param[in] loiter_direction Loiter direction: -1=counter-clockwise, 1=clockwise
+	 * @param[in] ground_vel Vehicle ground velocity vector [m/s]
+	 * @param[in] wind_vel Wind velocity vector [m/s]
+	 */
+	void navigatePathTangent(const matrix::Vector2d &vehicle_pos, const matrix::Vector2d &position_setpoint,
+				 const matrix::Vector2f &tangent_setpoint,
+				 const matrix::Vector2f &ground_vel, const matrix::Vector2f &wind_vel, const float &curvature);
+
+	/*
 	 * Navigate on a fixed heading.
 	 *
 	 * This only holds a certain (air mass relative) direction and does not perform

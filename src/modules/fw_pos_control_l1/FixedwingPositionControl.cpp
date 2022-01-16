@@ -2210,6 +2210,11 @@ FixedwingPositionControl::Run()
 			vehicle_local_position_setpoint_s trajectory_setpoint;
 
 			if (_trajectory_setpoint_sub.update(&trajectory_setpoint)) {
+				bool valid_setpoint = false;
+				_pos_sp_triplet = {}; // clear any existing
+				_pos_sp_triplet.timestamp = trajectory_setpoint.timestamp;
+				_pos_sp_triplet.current.timestamp = trajectory_setpoint.timestamp;
+
 				if (PX4_ISFINITE(trajectory_setpoint.x) && PX4_ISFINITE(trajectory_setpoint.y) && PX4_ISFINITE(trajectory_setpoint.z)) {
 					double lat;
 					double lon;
@@ -2218,8 +2223,6 @@ FixedwingPositionControl::Run()
 						_global_local_proj_ref.reproject(trajectory_setpoint.x, trajectory_setpoint.y, lat, lon);
 						_pos_sp_triplet = {}; // clear any existing
 
-						_pos_sp_triplet.timestamp = trajectory_setpoint.timestamp;
-						_pos_sp_triplet.current.timestamp = trajectory_setpoint.timestamp;
 						_pos_sp_triplet.current.valid = true;
 						_pos_sp_triplet.current.type = position_setpoint_s::SETPOINT_TYPE_POSITION;
 						_pos_sp_triplet.current.lat = lat;
